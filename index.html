@@ -1,0 +1,1430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pygame: Creating Shapes!</title>
+
+    <!-- Google Fonts: Poppins & Fira Code -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@500;600;700&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- FontAwesome & Canvas Confetti CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Poppins', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace']
+                    },
+                    colors: {
+                        alphagen: {
+                            purple: '#5E48C4',
+                            purpleDark: '#4A3AAD',
+                            purpleMid: '#7B6ED4',
+                            purplePale: '#EAE7FE',
+                            purpleGhost: '#F5F4FF',
+                            yellow: '#FFD071',
+                            yellowDark: '#E6B84A',
+                            yellowPale: '#FFF3CC',
+                            nearBlack: '#1A1A1A',
+                            darkGrey: '#404048',
+                            midGrey: '#888896',
+                            lightGrey: '#F2F2F4',
+                            cyan: '#59E4FB',
+                            cyanDark: '#055F6E',
+                            cyanPale: '#E0FAFE',
+                            coral: '#ED5661',
+                            coralDark: '#993040',
+                            coralPale: '#FFF0F1'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background-color: #0f081d;
+            font-family: 'Poppins', sans-serif;
+            color: #1A1A1A;
+            overflow-x: hidden;
+            user-select: none;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .slide-stage {
+            width: 1280px;
+            height: 720px;
+            margin: 16px auto 0 auto;
+            position: relative;
+            overflow: hidden;
+            background-color: #ffffff;
+            border-radius: 28px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            border: 1px solid #EAE7FE;
+        }
+
+        .slide-panel {
+            width: 1280px;
+            height: 720px;
+            padding: 28px 44px;
+            display: none;
+            flex-direction: column;
+            justify-content: space-between;
+            position: absolute;
+            top: 0;
+            left: 0;
+            background: #ffffff;
+        }
+
+        .slide-panel.active {
+            display: flex;
+            animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .btn-interactive {
+            cursor: pointer;
+            transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s ease, background-color 0.2s ease;
+        }
+        .btn-interactive:hover {
+            transform: translateY(-2px) scale(1.02);
+        }
+        .btn-interactive:active {
+            transform: translateY(1px) scale(0.98);
+        }
+
+        .nav-bar {
+            width: 1280px;
+            margin: 12px auto 16px auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 16px;
+        }
+
+        .nav-btn {
+            background: #2A1C68;
+            color: #FFD071;
+            border: 2px solid #5E48C4;
+            padding: 10px 24px;
+            border-radius: 14px;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+        .nav-btn:hover:not(:disabled) {
+            background: #5E48C4;
+            color: #ffffff;
+            transform: scale(1.04);
+        }
+        .nav-btn:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+        }
+
+        .dot-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #2A1C68;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .dot-indicator.active {
+            background: #FFD071;
+            width: 24px;
+            border-radius: 10px;
+        }
+
+        .checkbox-card {
+            background: #ffffff;
+            border: 2px solid #EAE7FE;
+            border-radius: 18px;
+            padding: 16px 22px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .checkbox-card:hover {
+            border-color: #5E48C4;
+            background: #F5F4FF;
+        }
+        .checkbox-card.checked {
+            background: #f0fdf4;
+            border-color: #22c55e;
+        }
+        .checkbox-box {
+            width: 28px;
+            height: 28px;
+            border: 2px solid #5E48C4;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+        .checkbox-card.checked .checkbox-box {
+            background: #22c55e;
+            border-color: #22c55e;
+        }
+
+        .quiz-option {
+            background: #ffffff;
+            border: 2px solid #EAE7FE;
+            border-radius: 16px;
+            padding: 12px 18px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #1A1A1A;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .quiz-option:hover {
+            border-color: #5E48C4;
+            background: #F5F4FF;
+        }
+        .quiz-option.correct {
+            background: #f0fdf4 !important;
+            border-color: #22c55e !important;
+            color: #166534 !important;
+        }
+        .quiz-option.wrong {
+            background: #fef2f2 !important;
+            border-color: #ef4444 !important;
+            color: #991b1b !important;
+        }
+
+        .pygame-window {
+            background: #181825;
+            border: 3px solid #313244;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            transition: all 0.2s ease;
+        }
+        .pygame-titlebar {
+            background: #313244;
+            padding: 6px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: #cdd6f4;
+            font-family: 'Fira Code', monospace;
+            font-size: 11px;
+        }
+
+        .spark-wavy-underline {
+            position: relative;
+            display: inline-block;
+            color: #5E48C4;
+        }
+        .spark-wavy-underline::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: -8px;
+            width: 100%;
+            height: 10px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 4' preserveAspectRatio='none'%3E%3Cpath d='M0 2 Q 5 0, 10 2 T 20 2' fill='none' stroke='%23FFD071' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E");
+            background-repeat: repeat-x;
+            background-size: 18px 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="slide-stage">
+
+        <!-- Stage Top Navigation Header -->
+        <header class="w-full bg-white border-b border-alphagen-purplePale px-6 py-2.5 flex items-center justify-between z-50">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-alphagen-purple flex items-center justify-center text-white text-lg shadow-md shadow-alphagen-purple/20">
+                    <i class="fa-solid fa-shapes"></i>
+                </div>
+                <div>
+                    <h1 class="font-extrabold text-sm text-alphagen-purple tracking-tight">Pygame: Creating Shapes</h1>
+                    <p class="text-[11px] font-semibold text-alphagen-cyanDark">2D Computer Graphics & Geometry</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2" id="header-dots-container"></div>
+
+            <div class="flex items-center gap-3">
+                <span id="slide-counter-pill" class="text-xs font-bold text-alphagen-purple bg-alphagen-purpleGhost px-3 py-1 rounded-full border border-alphagen-purplePale">
+                    Slide 1 / 11
+                </span>
+
+                <select id="slide-dropdown" onchange="goToSlide(parseInt(this.value))" class="text-xs font-bold text-alphagen-nearBlack bg-alphagen-lightGrey hover:bg-slate-200 border border-slate-200 px-3 py-1 rounded-xl cursor-pointer focus:outline-none focus:border-alphagen-purple transition">
+                    <option value="1">1. Welcome</option>
+                    <option value="2">2. Real-Life Analogy: House Builder</option>
+                    <option value="3">3. Rectangles & Squares (pygame.draw.rect)</option>
+                    <option value="4">4. Coding Challenge: Rectangles & Squares</option>
+                    <option value="5">5. Circles & Ellipses (circle & ellipse)</option>
+                    <option value="6">6. Coding Challenge: Circles & Ellipses</option>
+                    <option value="7">7. Polygons (pygame.draw.polygon)</option>
+                    <option value="8">8. Coding Challenge: Custom Polygons</option>
+                    <option value="9">9. Shape Knowledge Check Quiz</option>
+                    <option value="10">10. Creative Challenge</option>
+                    <option value="11">11. Pygame Shapes Master Quiz</option>
+                </select>
+
+                <button onclick="toggleAudio()" id="audio-btn" class="w-8 h-8 rounded-xl bg-alphagen-purpleGhost hover:bg-alphagen-purplePale text-alphagen-purple border border-alphagen-purplePale flex items-center justify-center text-xs transition btn-interactive" title="Toggle Sound">
+                    <i class="fa-solid fa-volume-high"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- SLIDE 1: TITLE (No wavy line underline on home screen) -->
+        <div id="slide-1" class="slide-panel justify-center items-center text-center">
+            <div class="inline-flex items-center gap-2 bg-alphagen-purpleGhost border border-alphagen-purplePale text-alphagen-purple text-xs font-extrabold px-4 py-2 rounded-full mb-6 shadow-xs tracking-wider">
+                PYTHON GAME DEVELOPMENT
+            </div>
+
+            <h1 class="text-5xl md:text-6xl font-extrabold text-alphagen-purple mb-8 tracking-tight max-w-4xl">
+                Pygame: <span class="spark-wavy-underline text-alphagen-purple">Creating Shapes!</span>
+            </h1>
+
+           
+
+            <div class="flex justify-center w-full">
+                <button onclick="nextSlide(); playSound('pop');" class="bg-alphagen-yellow hover:bg-alphagen-yellowDark text-alphagen-nearBlack font-extrabold text-lg px-10 py-4 rounded-2xl shadow-lg shadow-alphagen-yellow/30 btn-interactive flex items-center gap-3">
+                    <span>Start Exploring</span>
+                    <i class="fa-solid fa-play"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- SLIDE 2: REAL-LIFE ANALOGY (HOUSE BUILDER WITH SHAPES - RETAINED) -->
+        <div id="slide-2" class="slide-panel">
+            <div>
+                <span class="text-xs uppercase font-extrabold tracking-wider text-alphagen-purple bg-alphagen-purpleGhost px-3 py-1 rounded-md border border-alphagen-purplePale">Real-Life Analogy</span>
+                <h2 class="text-2xl md:text-3xl font-extrabold text-alphagen-purple mt-1">Build<span class="text-alphagen-cyanDark"> Structure using Shapes</span></h2>
+              
+            </div>
+
+            <div class="grid grid-cols-12 gap-6 my-auto items-center">
+                <!-- Left: Shape Tool Palette -->
+                <div class="col-span-5 space-y-2.5">
+                    <div class="bg-alphagen-purpleGhost border-2 border-alphagen-purplePale p-3 rounded-2xl space-y-2">
+                        <span class="text-[10px] font-extrabold text-alphagen-purple uppercase bg-white px-2 py-0.5 rounded border border-alphagen-purplePale">Shapes Palette</span>
+                        <div class="grid grid-cols-2 gap-2 pt-1">
+                            <button onclick="assembleHousePart('base')" id="part-btn-base" class="btn-interactive bg-white border border-alphagen-purplePale hover:border-alphagen-purple p-2.5 rounded-xl text-xs font-bold text-alphagen-nearBlack flex items-center gap-2">
+                                <span class="w-4 h-4 bg-amber-500 rounded-sm inline-block"></span>
+                                <span>1. Square Base</span>
+                            </button>
+
+                            <button onclick="assembleHousePart('roof')" id="part-btn-roof" class="btn-interactive bg-white border border-alphagen-purplePale hover:border-alphagen-purple p-2.5 rounded-xl text-xs font-bold text-alphagen-nearBlack flex items-center gap-2">
+                                <span class="w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[14px] border-b-rose-500 inline-block"></span>
+                                <span>2. Triangle Roof</span>
+                            </button>
+
+                            <button onclick="assembleHousePart('door')" id="part-btn-door" class="btn-interactive bg-white border border-alphagen-purplePale hover:border-alphagen-purple p-2.5 rounded-xl text-xs font-bold text-alphagen-nearBlack flex items-center gap-2">
+                                <span class="w-3 h-5 bg-amber-900 rounded-xs inline-block"></span>
+                                <span>3. Rect Door</span>
+                            </button>
+
+                            <button onclick="assembleHousePart('sun')" id="part-btn-sun" class="btn-interactive bg-white border border-alphagen-purplePale hover:border-alphagen-purple p-2.5 rounded-xl text-xs font-bold text-alphagen-nearBlack flex items-center gap-2">
+                                <span class="w-4 h-4 bg-yellow-400 rounded-full inline-block"></span>
+                                <span>4. Circle Sun</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="bg-alphagen-yellowPale border-2 border-alphagen-yellowDark p-3 rounded-2xl text-xs text-alphagen-nearBlack space-y-1 font-medium">
+                        <p class="font-bold">💡 Why build with shapes?</p>
+                        <p class="text-[11px] leading-relaxed">Shapes are resizable, and drawn programmatically in Pygame code without requiring external image files!</p>
+                    </div>
+                </div>
+
+                <!-- Right: Assembled Pygame Window Preview -->
+                <div class="col-span-7">
+                    <div class="pygame-window">
+                        <div class="pygame-titlebar">
+                            <div class="flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-red-500 inline-block"></span>
+                                <span class="w-2.5 h-2.5 rounded-full bg-yellow-500 inline-block"></span>
+                                <span class="w-2.5 h-2.5 rounded-full bg-green-500 inline-block"></span>
+                                <span class="ml-2 font-mono text-[11px]">House Scene Canvas (400x260)</span>
+                            </div>
+                            <span class="text-emerald-400 font-mono text-[10px]">pygame.draw active</span>
+                        </div>
+                        <div class="relative w-full h-[210px] bg-sky-900 overflow-hidden flex items-center justify-center">
+                            <!-- Canvas Ground -->
+                            <div class="absolute bottom-0 w-full h-12 bg-emerald-600"></div>
+
+                            <!-- House Base (Square) -->
+                            <div id="house-canvas-base" class="absolute w-28 h-28 bg-amber-200 border-2 border-amber-800 transition-all duration-300 opacity-0 scale-75" style="left: 140px; bottom: 30px;">
+                                <div class="w-full h-full relative">
+                                    <!-- Door (Rectangle) -->
+                                    <div id="house-canvas-door" class="absolute bottom-0 left-10 w-8 h-14 bg-amber-900 border-2 border-amber-950 transition-all duration-300 opacity-0"></div>
+                                </div>
+                            </div>
+
+                            <!-- Roof (Triangle SVG) -->
+                            <div id="house-canvas-roof" class="absolute w-36 h-20 transition-all duration-300 opacity-0 -translate-y-4" style="left: 124px; bottom: 138px;">
+                                <svg viewBox="0 0 100 60" class="w-full h-full drop-shadow-md">
+                                    <polygon points="50,5 5,58 95,58" fill="#e11d48" stroke="#881337" stroke-width="3"/>
+                                </svg>
+                            </div>
+
+                            <!-- Sun (Circle) -->
+                            <div id="house-canvas-sun" class="absolute w-12 h-12 bg-yellow-400 border-2 border-amber-500 rounded-full transition-all duration-300 opacity-0 scale-50" style="right: 24px; top: 20px;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="house-builder-feedback" class="bg-alphagen-purpleGhost border-2 border-dashed border-alphagen-purple p-2.5 rounded-2xl text-xs text-alphagen-purple font-bold text-center">
+                Click each shape on the left to add it onto the Pygame canvas on the right!
+            </div>
+        </div>
+
+        <!-- SLIDE 3: RECTANGLES & SQUARES (PYGAME.DRAW.RECT - RETAINED) -->
+        <div id="slide-3" class="slide-panel">
+            <div>
+                <span class="text-xs uppercase font-extrabold tracking-wider text-alphagen-purple bg-alphagen-purpleGhost px-3 py-1 rounded-md border border-alphagen-purplePale">Rectangles & Squares</span>
+                <h2 class="text-2xl md:text-3xl font-extrabold text-alphagen-purple mt-1"><code class="text-alphagen-purple font-mono">Rectangles</code> <span class="text-alphagen-cyanDark"> and Squares </span></h2>
+                
+            </div>
+
+            <div class="grid grid-cols-12 gap-5 my-auto items-center">
+                <!-- Left: Interactive Code Preview & Parameters -->
+                <div class="col-span-6 space-y-2.5">
+                    <div class="bg-gray-900 border-2 border-gray-700 rounded-2xl p-3.5 text-white font-mono text-[11px] space-y-1">
+                        <span class="text-gray-400 font-bold"># Syntax: pygame.draw.rect(surface, color, (x, y, w, h), thickness)</span>
+                        <div class="text-green-400 font-bold leading-relaxed pt-1">
+                            pygame.draw.rect(screen, <span id="code-rect-color" class="text-yellow-300">(255, 208, 113)</span>, (<span id="code-rect-x">100</span>, <span id="code-rect-y">50</span>, <span id="code-rect-w">120</span>, <span id="code-rect-h">120</span>), <span id="code-rect-width" class="text-cyan-300">0</span>)
+                        </div>
+                    </div>
+
+                    <!-- Parameter Controls -->
+                    <div class="bg-alphagen-purpleGhost border-2 border-alphagen-purplePale p-3 rounded-2xl space-y-2">
+                        <div class="grid grid-cols-2 gap-2 text-xs font-bold">
+                            <div class="flex items-center justify-between">
+                                <span>X: <span id="lbl-rect-x" class="text-alphagen-purple font-mono">100</span></span>
+                                <input type="range" min="20" max="220" value="100" id="slider-rect-x" oninput="updateRectCustomizer()" class="w-20 accent-[#5E48C4]">
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span>Y: <span id="lbl-rect-y" class="text-alphagen-purple font-mono">50</span></span>
+                                <input type="range" min="10" max="110" value="50" id="slider-rect-y" oninput="updateRectCustomizer()" class="w-20 accent-[#5E48C4]">
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span>Width: <span id="lbl-rect-w" class="text-alphagen-purple font-mono">120</span></span>
+                                <input type="range" min="30" max="200" value="120" id="slider-rect-w" oninput="updateRectCustomizer()" class="w-20 accent-[#5E48C4]">
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span>Height: <span id="lbl-rect-h" class="text-alphagen-purple font-mono">120</span></span>
+                                <input type="range" min="30" max="160" value="120" id="slider-rect-h" oninput="updateRectCustomizer()" class="w-20 accent-[#5E48C4]">
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2 pt-1">
+                            <div class="flex items-center justify-between text-xs font-bold">
+                                <span>Color:</span>
+                                <select id="select-rect-color" onchange="updateRectCustomizer()" class="bg-white border border-alphagen-purplePale px-2 py-1 rounded text-[11px]">
+                                    <option value="yellow">Yellow</option>
+                                    <option value="purple">Purple</option>
+                                    <option value="cyan">Cyan</option>
+                                    <option value="coral">Coral</option>
+                                </select>
+                            </div>
+
+                            <div class="flex items-center justify-between text-xs font-bold">
+                                <span>Thickness:</span>
+                                <input type="number" id="input-rect-thickness" value="0" min="0" max="20" oninput="updateRectCustomizer()" class="bg-white border border-alphagen-purplePale px-2 py-0.5 rounded text-xs font-mono w-14">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Real-time Pygame Window Render -->
+                <div class="col-span-6">
+                    <div class="pygame-window">
+                        <div class="pygame-titlebar">
+                            <span class="font-mono text-[11px]">Pygame Canvas Preview (360x220)</span>
+                            <span id="rect-shape-type-badge" class="bg-alphagen-yellow text-alphagen-nearBlack px-2 py-0.5 rounded font-extrabold text-[10px]">SQUARE (W == H)</span>
+                        </div>
+                        <div class="relative w-full h-[180px] bg-slate-900 overflow-hidden">
+                            <canvas id="canvas-rect" width="360" height="180" class="w-full h-full"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tryouts & Questions Below -->
+            <div class="bg-alphagen-purpleGhost border-2 border-dashed border-alphagen-purple p-2.5 rounded-2xl text-xs space-y-1 text-alphagen-purple">
+                <div class="flex items-center justify-between font-bold">
+                    <span>💡 Tryout :</span>
+                  
+                </div>
+                <p class="text-[11px] text-alphagen-darkGrey font-medium">
+                    Setting <code class="bg-white px-1 rounded text-alphagen-purple font-bold">thickness = 0</code> draws a solid filled shape. Setting <code class="bg-white px-1 rounded text-alphagen-purple font-bold">thickness > 0</code> draws an empty shape with an outline border thickness!
+                </p>
+            </div>
+        </div>
+
+        <!-- SLIDE 4: CODING CHALLENGE 1 (RECTANGLES & SQUARES - CODES REMOVED FROM BELOW STEPS) -->
+        <div id="slide-4" class="slide-panel">
+            <div>
+                <span class="text-xs uppercase font-extrabold tracking-wider text-alphagen-purple bg-alphagen-purpleGhost px-3 py-1 rounded-md border border-alphagen-purplePale">Coding Challenge 1</span>
+                <h2 class="text-2xl md:text-3xl font-extrabold text-alphagen-purple mt-1">Coding Challenge: <span class="text-alphagen-cyanDark">Draw a Rectangle & Square</span></h2>
+               
+            </div>
+
+            <div class="max-w-3xl mx-auto my-auto w-full space-y-4">
+                <div class="checkbox-card" id="chal1-step-1" onclick="toggleTaskCard('chal1-step-1')">
+                    <div class="checkbox-box"><i class="fa-solid fa-check"></i></div>
+                    <div>
+                        <h3 class="font-extrabold text-alphagen-purple text-sm md:text-base">Step 1: Set up the Pygame Structure</h3>
+                    </div>
+                </div>
+
+                <div class="checkbox-card" id="chal1-step-2" onclick="toggleTaskCard('chal1-step-2')">
+                    <div class="checkbox-box"><i class="fa-solid fa-check"></i></div>
+                    <div>
+                        <h3 class="font-extrabold text-alphagen-purple text-sm md:text-base">Step 2: Draw a Solid Square inside the Loop</h3>
+                    </div>
+                </div>
+
+                <div class="checkbox-card" id="chal1-step-3" onclick="toggleTaskCard('chal1-step-3')">
+                    <div class="checkbox-box"><i class="fa-solid fa-check"></i></div>
+                    <div>
+                        <h3 class="font-extrabold text-alphagen-purple text-sm md:text-base">Step 3: Draw an Outlined Rectangle beside it</h3>
+                    </div>
+                </div>
+
+                <div class="checkbox-card" id="chal1-step-4" onclick="toggleTaskCard('chal1-step-4')">
+                    <div class="checkbox-box"><i class="fa-solid fa-check"></i></div>
+                    <div>
+                        <h3 class="font-extrabold text-alphagen-purple text-sm md:text-base">Step 4: Update the Display Canvas</h3>
+                    </div>
+                </div>
+            </div>
+
+           
+        </div>
+
+        <!-- SLIDE 5: CIRCLES & ELLIPSES (SYNTAX BREAKDOWN & ACCURATE CANVAS RENDERING) -->
+        <div id="slide-5" class="slide-panel">
+            <div>
+                <span class="text-xs uppercase font-extrabold tracking-wider text-alphagen-purple bg-alphagen-purpleGhost px-3 py-1 rounded-md border border-alphagen-purplePale">Circles & Ellipses</span>
+                <h2 class="text-2xl md:text-3xl font-extrabold text-alphagen-purple mt-1">Circle &  <span class="text-alphagen-cyanDark">Ellipse</span></h2>
+                
+            </div>
+
+            <div class="grid grid-cols-12 gap-5 my-auto items-center">
+                <!-- Left: Code & Controls with Syntax Explanations -->
+                <div class="col-span-5 space-y-2.5">
+                    <div class="bg-gray-900 border-2 border-gray-700 rounded-2xl p-3 text-white font-mono text-[11px] space-y-1">
+                        <div id="code-syntax-explanation" class="text-gray-400 font-bold text-[10px]">
+                            # Syntax: pygame.draw.circle(surface, color, (center_x, center_y), radius, thickness)
+                        </div>
+                        <div id="code-circle-display" class="text-green-400 font-bold leading-relaxed">
+                            pygame.draw.circle(screen, (237, 86, 97), (<span id="code-circ-cx">240</span>, <span id="code-circ-cy">110</span>), <span id="code-circ-r">60</span>, <span id="code-circ-w">0</span>)
+                        </div>
+                    </div>
+
+                    <!-- Toggle Mode & Sliders -->
+                    <div class="bg-alphagen-purpleGhost border-2 border-alphagen-purplePale p-3 rounded-2xl space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-alphagen-purple">Shape Function:</span>
+                            <div class="flex gap-2">
+                                <button onclick="setCircleMode('circle')" id="mode-btn-circle" class="btn-interactive bg-alphagen-purple text-white px-3 py-1 rounded-lg text-xs font-bold">Circle</button>
+                                <button onclick="setCircleMode('ellipse')" id="mode-btn-ellipse" class="btn-interactive bg-white border border-alphagen-purplePale text-alphagen-nearBlack px-3 py-1 rounded-lg text-xs font-bold">Ellipse</button>
+                            </div>
+                        </div>
+
+                        <!-- Parameter Sliders -->
+                        <div id="circle-controls-grid" class="grid grid-cols-2 gap-2 text-xs font-bold pt-1">
+                            <div class="flex items-center justify-between">
+                                <span id="lbl-x-title">Center X: <span id="lbl-circ-cx" class="text-alphagen-purple font-mono">240</span></span>
+                                <input type="range" min="60" max="420" value="240" id="slider-circ-cx" oninput="updateCircleCustomizer()" class="w-20 accent-[#5E48C4]">
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span id="lbl-y-title">Center Y: <span id="lbl-circ-cy" class="text-alphagen-purple font-mono">110</span></span>
+                                <input type="range" min="40" max="180" value="110" id="slider-circ-cy" oninput="updateCircleCustomizer()" class="w-20 accent-[#5E48C4]">
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span id="lbl-radius-title">Radius: <span id="lbl-circ-r" class="text-alphagen-purple font-mono">60</span></span>
+                                <input type="range" min="10" max="95" value="60" id="slider-circ-r" oninput="updateCircleCustomizer()" class="w-20 accent-[#5E48C4]">
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span>Thickness: <span id="lbl-circ-w" class="text-alphagen-purple font-mono">0</span></span>
+                                <input type="range" min="0" max="15" value="0" id="slider-circ-w" oninput="updateCircleCustomizer()" class="w-20 accent-[#5E48C4]">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Render Canvas -->
+                <div class="col-span-7">
+                    <div class="pygame-window">
+                        <div class="pygame-titlebar">
+                            <span class="font-mono text-[11px]">Curved Shape Render Preview (Canvas Output)</span>
+                            <span id="circle-mode-badge" class="bg-alphagen-coral text-white px-2 py-0.5 rounded font-bold text-[10px]">pygame.draw.circle</span>
+                        </div>
+                        <div class="relative w-full h-[230px] bg-slate-900 overflow-hidden">
+                            <canvas id="canvas-circle" class="w-full h-full block"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Syntax Parameter Explanation -->
+            <div id="circle-param-breakdown" class="bg-alphagen-purpleGhost border-2 border-dashed border-alphagen-purple p-2.5 rounded-2xl text-xs text-alphagen-purple space-y-1">
+                <span class="font-bold">💡 Code Parameter Breakdown:</span>
+                <p class="text-[11px] text-alphagen-darkGrey font-medium">
+                  <code class="bg-white px-1 rounded text-alphagen-purple font-bold">surface</code>: Where to draw (screen) | <code class="bg-white px-1 rounded text-alphagen-purple font-bold">color</code>: RGB tuple | <code class="bg-white px-1 rounded text-alphagen-purple font-bold">(x, y)</code>: Center coordinates for Circle, or bounding box (x,y,w,h) for Ellipse | <code class="bg-white px-1 rounded text-alphagen-purple font-bold">thickness</code>: 0 for solid fill, >0 for outline.
+                </p>
+            </div>
+        </div>
+
+        <!-- SLIDE 6: CODING CHALLENGE 2 (CIRCLES & ELLIPSES - CODES REMOVED) -->
+        <div id="slide-6" class="slide-panel">
+            <div>
+                <span class="text-xs uppercase font-extrabold tracking-wider text-alphagen-purple bg-alphagen-purpleGhost px-3 py-1 rounded-md border border-alphagen-purplePale">Coding Challenge 2</span>
+                <h2 class="text-2xl md:text-3xl font-extrabold text-alphagen-purple mt-1">Coding Challenge: <span class="text-alphagen-cyanDark">Draw a Circle and Ellipse</span></h2>
+               
+            </div>
+
+            <div class="max-w-3xl mx-auto my-auto w-full space-y-4">
+                <div class="checkbox-card" id="chal2-step-1" onclick="toggleTaskCard('chal2-step-1')">
+                    <div class="checkbox-box"><i class="fa-solid fa-check"></i></div>
+                    <div>
+                        <h3 class="font-extrabold text-alphagen-purple text-sm md:text-base">Step 1: Retain Pygame Structure & Fill Sky Background</h3>
+                    </div>
+                </div>
+
+                <div class="checkbox-card" id="chal2-step-2" onclick="toggleTaskCard('chal2-step-2')">
+                    <div class="checkbox-box"><i class="fa-solid fa-check"></i></div>
+                    <div>
+                        <h3 class="font-extrabold text-alphagen-purple text-sm md:text-base">Step 2: Draw aCircle in Top-Right Corner</h3>
+                    </div>
+                </div>
+
+                <div class="checkbox-card" id="chal2-step-3" onclick="toggleTaskCard('chal2-step-3')">
+                    <div class="checkbox-box"><i class="fa-solid fa-check"></i></div>
+                    <div>
+                        <h3 class="font-extrabold text-alphagen-purple text-sm md:text-base">Step 3: Draw an Ellipse across the Center</h3>
+                    </div>
+                </div>
+
+                <div class="checkbox-card" id="chal2-step-4" onclick="toggleTaskCard('chal2-step-4')">
+                    <div class="checkbox-box"><i class="fa-solid fa-check"></i></div>
+                    <div>
+                        <h3 class="font-extrabold text-alphagen-purple text-sm md:text-base">Step 4: Update Display and Verify Output</h3>
+                    </div>
+                </div>
+            </div>
+
+           
+        </div>
+
+        <!-- SLIDE 7: POLYGONS (PYGAME.DRAW.POLYGON - 3, 4, 5 SIDES ONLY WITH SYNTAX BREAKDOWN) -->
+        <div id="slide-7" class="slide-panel">
+            <div>
+                <span class="text-xs uppercase font-extrabold tracking-wider text-alphagen-purple bg-alphagen-purpleGhost px-3 py-1 rounded-md border border-alphagen-purplePale">Polygons & Coordinate Lists</span>
+                <h2 class="text-2xl md:text-3xl font-extrabold text-alphagen-purple mt-1"><code class="text-alphagen-purple font-mono">Polygons</code> </h2>
+              
+            </div>
+
+            <div class="grid grid-cols-12 gap-5 my-auto items-center">
+                <!-- Left: Point Count Selector & Coordinate Inputs -->
+                <div class="col-span-6 space-y-2">
+                    <div class="flex items-center justify-between bg-alphagen-purpleGhost border-2 border-alphagen-purplePale p-2.5 rounded-xl">
+                        <span class="text-xs font-bold text-alphagen-purple">Number of Sides:</span>
+                        <div class="flex gap-2">
+                            <button onclick="setPolyPointsCount(3)" id="poly-btn-3" class="btn-interactive bg-alphagen-purple text-white px-3 py-1 rounded-lg text-xs font-bold">3 (Triangle)</button>
+                            <button onclick="setPolyPointsCount(4)" id="poly-btn-4" class="btn-interactive bg-white border border-alphagen-purplePale px-3 py-1 rounded-lg text-xs font-bold">4 (Quadrilateral)</button>
+                            <button onclick="setPolyPointsCount(5)" id="poly-btn-5" class="btn-interactive bg-white border border-alphagen-purplePale px-3 py-1 rounded-lg text-xs font-bold">5 (Pentagon)</button>
+                        </div>
+                    </div>
+
+                    <!-- Points Coordinate Inputs Container -->
+                    <div id="poly-inputs-container" class="bg-alphagen-purpleGhost border-2 border-alphagen-purplePale p-2.5 rounded-xl space-y-1.5 max-h-36 overflow-y-auto">
+                        <!-- Dynamic Point Inputs Render Here -->
+                    </div>
+
+                    <!-- Code Syntax & Output -->
+                    <div class="bg-gray-900 border border-gray-700 p-2.5 rounded-xl text-white font-mono text-[10px] space-y-1">
+                        <span class="text-gray-400 font-bold block"># Syntax: pygame.draw.polygon(surface, color, point_list, thickness)</span>
+                        <div class="truncate">
+                            points = <span id="poly-code-list" class="text-green-400">[(180, 20), (80, 150), (280, 150)]</span>
+                        </div>
+                        <div class="text-cyan-300">
+                            pygame.draw.polygon(screen, (255, 208, 113), points, 0)
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Render Window -->
+                <div class="col-span-6">
+                    <div class="pygame-window">
+                        <div class="pygame-titlebar">
+                            <span class="font-mono text-[11px]">Polygon Render Canvas</span>
+                            <span id="poly-shape-title" class="bg-alphagen-yellow text-alphagen-nearBlack px-2 py-0.5 rounded font-bold text-[10px]">TRIANGLE (3 Points)</span>
+                        </div>
+                        <div class="relative w-full h-[180px] bg-slate-900 overflow-hidden">
+                            <canvas id="canvas-poly" width="360" height="180" class="w-full h-full"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Parameter Explanation -->
+            <div class="bg-alphagen-purpleGhost border-2 border-dashed border-alphagen-purple p-2.5 rounded-2xl text-xs text-alphagen-purple space-y-1">
+                <span class="font-bold">Code Parameter Breakdown:</span>
+                <p class="text-[11px] text-alphagen-darkGrey font-medium">
+                  <code class="bg-white px-1 rounded text-alphagen-purple font-bold">surface</code>: Display target | <code class="bg-white px-1 rounded text-alphagen-purple font-bold">color</code>: RGB tuple | <code class="bg-white px-1 rounded text-alphagen-purple font-bold">point_list</code>: List of (x, y) tuples defining vertices | <code class="bg-white px-1 rounded text-alphagen-purple font-bold">thickness</code>: 0 for solid fill, >0 for outline.
+                </p>
+            </div>
+        </div>
+
+        <!-- SLIDE 8: CODING CHALLENGE 3 (POLYGONS - CODES REMOVED) -->
+        <div id="slide-8" class="slide-panel">
+            <div>
+                <span class="text-xs uppercase font-extrabold tracking-wider text-alphagen-purple bg-alphagen-purpleGhost px-3 py-1 rounded-md border border-alphagen-purplePale">Coding Challenge 3</span>
+                <h2 class="text-2xl md:text-3xl font-extrabold text-alphagen-purple mt-1"> Coding Challenge: <span class="text-alphagen-cyanDark">Draw Polygon Shapes</span></h2>
+             
+            </div>
+
+            <div class="max-w-3xl mx-auto my-auto w-full space-y-4">
+                <div class="checkbox-card" id="chal3-step-1" onclick="toggleTaskCard('chal3-step-1')">
+                    <div class="checkbox-box"><i class="fa-solid fa-check"></i></div>
+                    <div>
+                        <h3 class="font-extrabold text-alphagen-purple text-sm md:text-base">Step 1: Retain Pygame Structure & Main Loop</h3>
+                    </div>
+                </div>
+
+                <div class="checkbox-card" id="chal3-step-2" onclick="toggleTaskCard('chal3-step-2')">
+                    <div class="checkbox-box"><i class="fa-solid fa-check"></i></div>
+                    <div>
+                        <h3 class="font-extrabold text-alphagen-purple text-sm md:text-base">Step 2: Create a Triangle </h3>
+                    </div>
+                </div>
+
+                <div class="checkbox-card" id="chal3-step-3" onclick="toggleTaskCard('chal3-step-3')">
+                    <div class="checkbox-box"><i class="fa-solid fa-check"></i></div>
+                    <div>
+                        <h3 class="font-extrabold text-alphagen-purple text-sm md:text-base">Step 3: Create a Quadrilateral</h3>
+                    </div>
+                </div>
+
+                <div class="checkbox-card" id="chal3-step-4" onclick="toggleTaskCard('chal3-step-4')">
+                    <div class="checkbox-box"><i class="fa-solid fa-check"></i></div>
+                    <div>
+                        <h3 class="font-extrabold text-alphagen-purple text-sm md:text-base">Step 4: Update Display & Verify Output</h3>
+                    </div>
+                </div>
+            </div>
+
+          
+        </div>
+
+        <!-- SLIDE 9: SHAPE KNOWLEDGE CHECK QUIZ (UPDATED WITH THICKNESS PARAMETER TERMINOLOGY) -->
+        <div id="slide-9" class="slide-panel">
+            <div>
+                <span class="text-xs uppercase font-extrabold tracking-wider text-alphagen-purple bg-alphagen-purpleGhost px-3 py-1 rounded-md border border-alphagen-purplePale">Knowledge Check</span>
+                <h2 class="text-xl md:text-2xl font-extrabold text-alphagen-purple mt-1"> <span class="text-alphagen-cyanDark">Knowledge Check Quiz</span></h2>
+               
+            </div>
+
+            <div class="grid grid-cols-3 gap-5 my-auto">
+                <!-- Question 1 -->
+                <div class="bg-alphagen-purpleGhost border-2 border-alphagen-purplePale p-4 rounded-2xl flex flex-col justify-between">
+                    <div>
+                        <span class="text-[10px] font-extrabold text-alphagen-purple bg-white px-2 py-0.5 rounded border border-alphagen-purplePale">Question 1 of 3</span>
+                        <h3 class="text-xs font-bold text-alphagen-nearBlack mt-2 mb-3">Which value of the <code class="text-alphagen-purple">thickness</code> parameter makes a shape completely filled/solid?</h3>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="quiz-option" onclick="checkQuiz1(1, 1, this)">A) thickness = 1</div>
+                        <div class="quiz-option" onclick="checkQuiz1(1, 2, this)">B) thickness = 0</div>
+                        <div class="quiz-option" onclick="checkQuiz1(1, 3, this)">C) thickness = -1</div>
+                        <div class="quiz-option" onclick="checkQuiz1(1, 4, this)">D) thickness = 10</div>
+                    </div>
+                </div>
+
+                <!-- Question 2 -->
+                <div class="bg-alphagen-purpleGhost border-2 border-alphagen-purplePale p-4 rounded-2xl flex flex-col justify-between">
+                    <div>
+                        <span class="text-[10px] font-extrabold text-alphagen-purple bg-white px-2 py-0.5 rounded border border-alphagen-purplePale">Question 2 of 3</span>
+                        <h3 class="text-xs font-bold text-alphagen-nearBlack mt-2 mb-3">To draw a 5-sided Pentagon using <code class="text-alphagen-purple">pygame.draw.polygon()</code>, how many coordinate pairs are required in your list?</h3>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="quiz-option" onclick="checkQuiz1(2, 1, this)">A) 3 points</div>
+                        <div class="quiz-option" onclick="checkQuiz1(2, 2, this)">B) 4 points</div>
+                        <div class="quiz-option" onclick="checkQuiz1(2, 3, this)">C) 5 points</div>
+                        <div class="quiz-option" onclick="checkQuiz1(2, 4, this)">D) 10 points</div>
+                    </div>
+                </div>
+
+                <!-- Question 3 -->
+                <div class="bg-alphagen-purpleGhost border-2 border-alphagen-purplePale p-4 rounded-2xl flex flex-col justify-between">
+                    <div>
+                        <span class="text-[10px] font-extrabold text-alphagen-purple bg-white px-2 py-0.5 rounded border border-alphagen-purplePale">Question 3 of 3</span>
+                        <h3 class="text-xs font-bold text-alphagen-nearBlack mt-2 mb-3">Which syntax correctly draws an empty circle outline of radius 30 and border thickness 3?</h3>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="quiz-option" onclick="checkQuiz1(3, 1, this)">A) draw.circle(screen, color, center, 30, 3)</div>
+                        <div class="quiz-option" onclick="checkQuiz1(3, 2, this)">B) draw.circle(screen, color, 30, center, 0)</div>
+                        <div class="quiz-option" onclick="checkQuiz1(3, 3, this)">C) draw.circle(color, center, 30, 3)</div>
+                        <div class="quiz-option" onclick="checkQuiz1(3, 4, this)">D) draw.round(screen, 30, 3)</div>
+                    </div>
+                </div>
+            </div>
+
+          
+        </div>
+
+        <!-- SLIDE 10: CREATIVE CODING CHALLENGE (NO TARGET PRE-RENDERED GRAPHIC OUTPUT) -->
+        <div id="slide-10" class="slide-panel">
+            <div>
+                <span class="text-xs uppercase font-extrabold tracking-wider text-alphagen-purple bg-alphagen-purpleGhost px-3 py-1 rounded-md border border-alphagen-purplePale">Creative Challenge</span>
+                <h2 class="text-2xl md:text-3xl font-extrabold text-alphagen-purple mt-1">Creative Challenge: <span class="text-alphagen-cyanDark">Build Your Custom Scene!</span></h2>
+             
+            </div>
+
+            <div class="grid grid-cols-12 gap-6 my-auto items-center">
+                <!-- Left: House Blueprint Guide -->
+                <div class="col-span-6 space-y-3">
+                    <div class="bg-alphagen-purpleGhost border-2 border-alphagen-purplePale p-4 rounded-2xl space-y-2">
+                        <span class="text-xs font-bold text-alphagen-purple uppercase bg-white px-2.5 py-1 rounded border border-alphagen-purplePale">Option A: House & Sun Blueprint</span>
+                        <ul class="text-xs text-alphagen-darkGrey space-y-1.5 font-medium pt-1">
+                            <li>• <strong>Background:</strong> Sky Blue <code class="font-mono text-alphagen-purple">(135, 206, 235)</code></li>
+                            <li>• <strong>Grass:</strong> Green <code class="font-mono text-alphagen-purple">pygame.draw.rect</code> along screen bottom</li>
+                            <li>• <strong>House Base:</strong> Solid <code class="font-mono text-alphagen-purple">pygame.draw.rect</code></li>
+                            <li>• <strong>Roof:</strong> Triangle <code class="font-mono text-alphagen-purple">pygame.draw.polygon</code> with 3 points</li>
+                            <li>• <strong>Sun:</strong> Circle <code class="font-mono text-alphagen-purple">pygame.draw.circle</code> in top corner</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Right: Imagination Challenge Guide -->
+                <div class="col-span-6 space-y-3">
+                    <div class="bg-alphagen-yellowPale border-2 border-alphagen-yellowDark p-4 rounded-2xl space-y-2">
+                        <span class="text-xs font-bold text-alphagen-nearBlack uppercase bg-alphagen-yellow px-2.5 py-1 rounded">Option B: Use Your Imagination!</span>
+                        <p class="text-xs text-alphagen-nearBlack leading-relaxed font-medium pt-1">
+                        Design your own custom scene using a mix of primitive shapes:
+                        </p>
+                        
+                    </div>
+                </div>
+            </div>
+
+            
+        </div>
+
+        <!-- SLIDE 11: PYGAME SHAPES MASTER QUIZ -->
+        <div id="slide-11" class="slide-panel">
+            <div>
+                <span class="text-xs uppercase font-extrabold tracking-wider text-alphagen-purple bg-alphagen-purpleGhost px-3 py-1 rounded-md border border-alphagen-purplePale">Master Quiz</span>
+                <h2 class="text-xl md:text-2xl font-extrabold text-alphagen-purple mt-1">Pygame Shapes <span class="text-alphagen-cyanDark">Master Quiz</span></h2>
+              
+            </div>
+
+            <div class="grid grid-cols-3 gap-5 my-auto">
+                <!-- Question 1 -->
+                <div class="bg-alphagen-purpleGhost border-2 border-alphagen-purplePale p-4 rounded-2xl flex flex-col justify-between">
+                    <div>
+                        <span class="text-[10px] font-extrabold text-alphagen-purple bg-white px-2 py-0.5 rounded border border-alphagen-purplePale">Question 1 of 3</span>
+                        <h3 class="text-xs font-bold text-alphagen-nearBlack mt-2 mb-3">Which Pygame function is used to draw a 3-sided triangle shape onto the screen?</h3>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="quiz-option" onclick="checkMasterQuiz(1, 1, this)">A) pygame.draw.triangle()</div>
+                        <div class="quiz-option" onclick="checkMasterQuiz(1, 2, this)">B) pygame.draw.polygon()</div>
+                        <div class="quiz-option" onclick="checkMasterQuiz(1, 3, this)">C) pygame.draw.lines()</div>
+                        <div class="quiz-option" onclick="checkMasterQuiz(1, 4, this)">D) pygame.draw.rect()</div>
+                    </div>
+                </div>
+
+                <!-- Question 2 -->
+                <div class="bg-alphagen-purpleGhost border-2 border-alphagen-purplePale p-4 rounded-2xl flex flex-col justify-between">
+                    <div>
+                        <span class="text-[10px] font-extrabold text-alphagen-purple bg-white px-2 py-0.5 rounded border border-alphagen-purplePale">Question 2 of 3</span>
+                        <h3 class="text-xs font-bold text-alphagen-nearBlack mt-2 mb-3">What are the 4 values inside a rectangle tuple parameter <code class="text-alphagen-purple">(x, y, w, h)</code>?</h3>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="quiz-option" onclick="checkMasterQuiz(2, 1, this)">A) (Red, Green, Blue, Alpha)</div>
+                        <div class="quiz-option" onclick="checkMasterQuiz(2, 2, this)">B) (TopX, TopY, Width, Height)</div>
+                        <div class="quiz-option" onclick="checkMasterQuiz(2, 3, this)">C) (CenterX, CenterY, Radius, Width)</div>
+                        <div class="quiz-option" onclick="checkMasterQuiz(2, 4, this)">D) (Start, End, Step, Count)</div>
+                    </div>
+                </div>
+
+                <!-- Question 3 -->
+                <div class="bg-alphagen-purpleGhost border-2 border-alphagen-purplePale p-4 rounded-2xl flex flex-col justify-between">
+                    <div>
+                        <span class="text-[10px] font-extrabold text-alphagen-purple bg-white px-2 py-0.5 rounded border border-alphagen-purplePale">Question 3 of 3</span>
+                        <h3 class="text-xs font-bold text-alphagen-nearBlack mt-2 mb-3">If <code class="text-alphagen-purple">width == 120</code> and <code class="text-alphagen-purple">height == 120</code> in <code class="text-alphagen-purple">pygame.draw.rect</code>, what shape is produced?</h3>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="quiz-option" onclick="checkMasterQuiz(3, 1, this)">A) A Perfect Square</div>
+                        <div class="quiz-option" onclick="checkMasterQuiz(3, 2, this)">B) A Circle</div>
+                        <div class="quiz-option" onclick="checkMasterQuiz(3, 3, this)">C) A Triangle</div>
+                        <div class="quiz-option" onclick="checkMasterQuiz(3, 4, this)">D) An Ellipse</div>
+                    </div>
+                </div>
+            </div>
+
+           
+        </div>
+
+    </div>
+
+    <!-- Stage Bottom Navigation Bar -->
+    <div class="nav-bar">
+        <button id="prev-btn" class="nav-btn btn-interactive" onclick="prevSlide()" disabled>
+            <i class="fa-solid fa-arrow-left"></i>
+            <span>Previous</span>
+        </button>
+
+        <span class="text-xs font-semibold text-white">
+            Use Arrow Keys or Dots to navigate slides
+        </span>
+
+        <button id="next-btn" class="nav-btn btn-interactive" onclick="nextSlide()">
+            <span>Next</span>
+            <i class="fa-solid fa-arrow-right"></i>
+        </button>
+    </div>
+
+    <script>
+        let currentSlide = 1;
+        const totalSlides = 11;
+        let soundEnabled = true;
+
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function toggleAudio() {
+            soundEnabled = !soundEnabled;
+            const btn = document.getElementById('audio-btn');
+            btn.innerHTML = soundEnabled ? '<i class="fa-solid fa-volume-high"></i>' : '<i class="fa-solid fa-volume-xmark"></i>';
+        }
+
+        function playSound(type) {
+            if (!soundEnabled) return;
+            try {
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                if (type === 'correct') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(523.25, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(659.25, audioCtx.currentTime + 0.15);
+                    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                    osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+                } else if (type === 'pop') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(360, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(720, audioCtx.currentTime + 0.08);
+                    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
+                    osc.start(); osc.stop(audioCtx.currentTime + 0.08);
+                } else if (type === 'wrong') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(180, audioCtx.currentTime);
+                    osc.frequency.linearRampToValueAtTime(110, audioCtx.currentTime + 0.2);
+                    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
+                    osc.start(); osc.stop(audioCtx.currentTime + 0.25);
+                }
+            } catch (e) {}
+        }
+
+        function initHeaderDots() {
+            const container = document.getElementById('header-dots-container');
+            container.innerHTML = '';
+            for (let i = 1; i <= totalSlides; i++) {
+                const dot = document.createElement('div');
+                dot.className = `dot-indicator ${i === 1 ? 'active' : ''}`;
+                dot.onclick = () => goToSlide(i);
+                container.appendChild(dot);
+            }
+        }
+
+        function updateSlideDisplay() {
+            document.querySelectorAll('.slide-panel').forEach((panel, idx) => {
+                panel.classList.remove('active');
+                if (idx + 1 === currentSlide) panel.classList.add('active');
+            });
+
+            document.querySelectorAll('.dot-indicator').forEach((dot, idx) => {
+                if (idx + 1 === currentSlide) dot.classList.add('active');
+                else dot.classList.remove('active');
+            });
+
+            document.getElementById('slide-counter-pill').innerText = `Slide ${currentSlide} / ${totalSlides}`;
+            document.getElementById('slide-dropdown').value = currentSlide;
+
+            document.getElementById('prev-btn').disabled = currentSlide === 1;
+            document.getElementById('next-btn').disabled = currentSlide === totalSlides;
+
+            // Trigger canvas redraws on relevant slide entries
+            if (currentSlide === 3) updateRectCustomizer();
+            if (currentSlide === 5) updateCircleCustomizer();
+            if (currentSlide === 7) renderPolyInputs();
+        }
+
+        function goToSlide(slideNum) {
+            if (slideNum >= 1 && slideNum <= totalSlides) {
+                currentSlide = slideNum;
+                playSound('pop');
+                updateSlideDisplay();
+            }
+        }
+
+        function nextSlide() {
+            if (currentSlide < totalSlides) goToSlide(currentSlide + 1);
+        }
+
+        function prevSlide() {
+            if (currentSlide > 1) goToSlide(currentSlide - 1);
+        }
+
+        /* Slide 2 House Assembly Analogy Logic */
+        let housePartsState = { base: false, roof: false, door: false, sun: false };
+
+        function assembleHousePart(part) {
+            playSound('pop');
+            housePartsState[part] = true;
+
+            const targetEl = document.getElementById(`house-canvas-${part}`);
+            const btnEl = document.getElementById(`part-btn-${part}`);
+
+            if (targetEl) {
+                targetEl.style.opacity = '1';
+                targetEl.style.transform = 'scale(1) translate(0,0)';
+            }
+            if (btnEl) {
+                btnEl.classList.add('bg-emerald-100', 'border-emerald-500', 'text-emerald-900');
+            }
+
+            const feedback = document.getElementById('house-builder-feedback');
+            const assembledCount = Object.values(housePartsState).filter(Boolean).length;
+
+            if (assembledCount === 4) {
+                playSound('correct');
+                triggerConfetti();
+                feedback.innerText = "🎉 GREAT JOB! All 4 primitive geometric shapes assembled into a house!";
+                feedback.className = "bg-emerald-50 border-2 border-emerald-300 p-2.5 rounded-2xl text-xs text-emerald-800 font-bold text-center";
+            } else {
+                feedback.innerText = `Added ${part.toUpperCase()}! (${assembledCount}/4 shapes placed)`;
+            }
+        }
+
+        /* Slide 3 Rect Customizer Canvas Handler */
+        function updateRectCustomizer() {
+            const x = parseInt(document.getElementById('slider-rect-x').value);
+            const y = parseInt(document.getElementById('slider-rect-y').value);
+            const w = parseInt(document.getElementById('slider-rect-w').value);
+            const h = parseInt(document.getElementById('slider-rect-h').value);
+            const colorKey = document.getElementById('select-rect-color').value;
+            const thickness = parseInt(document.getElementById('input-rect-thickness').value) || 0;
+
+            document.getElementById('lbl-rect-x').innerText = x;
+            document.getElementById('lbl-rect-y').innerText = y;
+            document.getElementById('lbl-rect-w').innerText = w;
+            document.getElementById('lbl-rect-h').innerText = h;
+
+            document.getElementById('code-rect-x').innerText = x;
+            document.getElementById('code-rect-y').innerText = y;
+            document.getElementById('code-rect-w').innerText = w;
+            document.getElementById('code-rect-h').innerText = h;
+            document.getElementById('code-rect-width').innerText = thickness;
+
+            const badge = document.getElementById('rect-shape-type-badge');
+            if (w === h) {
+                badge.innerText = `SQUARE (${w}x${h})`;
+                badge.className = "bg-alphagen-yellow text-alphagen-nearBlack px-2 py-0.5 rounded font-extrabold text-[10px]";
+            } else {
+                badge.innerText = `RECTANGLE (${w}x${h})`;
+                badge.className = "bg-alphagen-cyan text-alphagen-nearBlack px-2 py-0.5 rounded font-extrabold text-[10px]";
+            }
+
+            const colorMap = {
+                yellow: { hex: '#ffd071', rgb: '(255, 208, 113)' },
+                purple: { hex: '#5e48c4', rgb: '(94, 72, 196)' },
+                cyan: { hex: '#59e4fb', rgb: '(89, 228, 251)' },
+                coral: { hex: '#ed5661', rgb: '(237, 86, 97)' }
+            };
+
+            document.getElementById('code-rect-color').innerText = colorMap[colorKey].rgb;
+
+            const canvas = document.getElementById('canvas-rect');
+            if (!canvas) return;
+
+            if (canvas.clientWidth && canvas.clientHeight) {
+                canvas.width = canvas.clientWidth;
+                canvas.height = canvas.clientHeight;
+            }
+
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw grid line background
+            ctx.strokeStyle = '#313244';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < canvas.width; i += 30) {
+                ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke();
+            }
+            for (let j = 0; j < canvas.height; j += 30) {
+                ctx.beginPath(); ctx.moveTo(0, j); ctx.lineTo(canvas.width, j); ctx.stroke();
+            }
+
+            // Draw Rect/Square
+            ctx.fillStyle = colorMap[colorKey].hex;
+            ctx.strokeStyle = colorMap[colorKey].hex;
+
+            if (thickness === 0) {
+                ctx.fillRect(x, y, w, h);
+            } else {
+                ctx.lineWidth = thickness;
+                ctx.strokeRect(x, y, w, h);
+            }
+        }
+
+        function toggleTaskCard(id) {
+            playSound('pop');
+            document.getElementById(id).classList.toggle('checked');
+            
+            const chalPrefix = id.split('-')[0];
+            const steps = [1, 2, 3, 4].map(num => `${chalPrefix}-step-${num}`);
+            const allChecked = steps.every(stepId => {
+                const el = document.getElementById(stepId);
+                return el && el.classList.contains('checked');
+            });
+
+            if (allChecked) {
+                playSound('correct');
+                triggerConfetti();
+            }
+        }
+
+        /* Slide 5 Circle / Ellipse Customizer with Syntax Explanations */
+        let circleMode = 'circle';
+
+        function setCircleMode(mode) {
+            playSound('pop');
+            circleMode = mode;
+
+            const btnCircle = document.getElementById('mode-btn-circle');
+            const btnEllipse = document.getElementById('mode-btn-ellipse');
+            const badge = document.getElementById('circle-mode-badge');
+            const syntaxExpl = document.getElementById('code-syntax-explanation');
+            const codeDisplay = document.getElementById('code-circle-display');
+            const xTitle = document.getElementById('lbl-x-title');
+            const yTitle = document.getElementById('lbl-y-title');
+            const rTitle = document.getElementById('lbl-radius-title');
+
+            if (mode === 'circle') {
+                btnCircle.className = "btn-interactive bg-alphagen-purple text-white px-3 py-1 rounded-lg text-xs font-bold";
+                btnEllipse.className = "btn-interactive bg-white border border-alphagen-purplePale text-alphagen-nearBlack px-3 py-1 rounded-lg text-xs font-bold";
+                badge.innerText = "pygame.draw.circle";
+                badge.className = "bg-alphagen-coral text-white px-2 py-0.5 rounded font-bold text-[10px]";
+                syntaxExpl.innerText = "# Syntax: pygame.draw.circle(surface, color, (center_x, center_y), radius, thickness)";
+                codeDisplay.innerHTML = `pygame.draw.circle(screen, (237, 86, 97), (<span id="code-circ-cx">240</span>, <span id="code-circ-cy">110</span>), <span id="code-circ-r">60</span>, <span id="code-circ-w">0</span>)`;
+                xTitle.innerHTML = `Center X: <span id="lbl-circ-cx" class="text-alphagen-purple font-mono">240</span>`;
+                yTitle.innerHTML = `Center Y: <span id="lbl-circ-cy" class="text-alphagen-purple font-mono">110</span>`;
+                rTitle.innerHTML = `Radius: <span id="lbl-circ-r" class="text-alphagen-purple font-mono">60</span>`;
+            } else {
+                btnEllipse.className = "btn-interactive bg-alphagen-purple text-white px-3 py-1 rounded-lg text-xs font-bold";
+                btnCircle.className = "btn-interactive bg-white border border-alphagen-purplePale text-alphagen-nearBlack px-3 py-1 rounded-lg text-xs font-bold";
+                badge.innerText = "pygame.draw.ellipse";
+                badge.className = "bg-alphagen-cyanDark text-white px-2 py-0.5 rounded font-bold text-[10px]";
+                syntaxExpl.innerText = "# Syntax: pygame.draw.ellipse(surface, color, (x, y, width, height), thickness)";
+                codeDisplay.innerHTML = `pygame.draw.ellipse(screen, (89, 228, 251), (<span id="code-circ-cx">140</span>, <span id="code-circ-cy">60</span>, <span id="code-circ-r">200</span>, 100), <span id="code-circ-w">0</span>)`;
+                xTitle.innerHTML = `Top X: <span id="lbl-circ-cx" class="text-alphagen-purple font-mono">140</span>`;
+                yTitle.innerHTML = `Top Y: <span id="lbl-circ-cy" class="text-alphagen-purple font-mono">60</span>`;
+                rTitle.innerHTML = `Width: <span id="lbl-circ-r" class="text-alphagen-purple font-mono">200</span>`;
+            }
+
+            updateCircleCustomizer();
+        }
+
+        function updateCircleCustomizer() {
+            const cx = parseInt(document.getElementById('slider-circ-cx').value);
+            const cy = parseInt(document.getElementById('slider-circ-cy').value);
+            const r = parseInt(document.getElementById('slider-circ-r').value);
+            const w = parseInt(document.getElementById('slider-circ-w').value);
+
+            document.getElementById('lbl-circ-cx').innerText = cx;
+            document.getElementById('lbl-circ-cy').innerText = cy;
+            document.getElementById('lbl-circ-r').innerText = r;
+            document.getElementById('lbl-circ-w').innerText = w;
+
+            if (document.getElementById('code-circ-cx')) document.getElementById('code-circ-cx').innerText = cx;
+            if (document.getElementById('code-circ-cy')) document.getElementById('code-circ-cy').innerText = cy;
+            if (document.getElementById('code-circ-r')) document.getElementById('code-circ-r').innerText = r;
+            if (document.getElementById('code-circ-w')) document.getElementById('code-circ-w').innerText = w;
+
+            const canvas = document.getElementById('canvas-circle');
+            if (!canvas) return;
+
+            if (canvas.clientWidth && canvas.clientHeight) {
+                canvas.width = canvas.clientWidth;
+                canvas.height = canvas.clientHeight;
+            }
+
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw Background Grid
+            ctx.strokeStyle = '#313244';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < canvas.width; i += 30) {
+                ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke();
+            }
+            for (let j = 0; j < canvas.height; j += 30) {
+                ctx.beginPath(); ctx.moveTo(0, j); ctx.lineTo(canvas.width, j); ctx.stroke();
+            }
+
+            ctx.fillStyle = circleMode === 'circle' ? '#ed5661' : '#59e4fb';
+            ctx.strokeStyle = circleMode === 'circle' ? '#ed5661' : '#59e4fb';
+            ctx.lineWidth = w === 0 ? 1 : w;
+
+            if (circleMode === 'circle') {
+                ctx.beginPath();
+                ctx.arc(cx, cy, r, 0, Math.PI * 2);
+                if (w === 0) ctx.fill(); else ctx.stroke();
+            } else {
+                ctx.beginPath();
+                ctx.ellipse(cx, cy, r / 1.5, r / 2.8, 0, 0, Math.PI * 2);
+                if (w === 0) ctx.fill(); else ctx.stroke();
+            }
+        }
+
+        /* Slide 7 Polygon Points Customizer (3, 4, 5 Sides Only) */
+        let polyPointsCount = 3;
+        let polyPoints = [
+            { x: 180, y: 20 },
+            { x: 80, y: 150 },
+            { x: 280, y: 150 },
+            { x: 320, y: 80 },
+            { x: 220, y: 10 }
+        ];
+
+        function setPolyPointsCount(cnt) {
+            playSound('pop');
+            polyPointsCount = cnt;
+
+            [3, 4, 5].forEach(n => {
+                const btn = document.getElementById(`poly-btn-${n}`);
+                if (btn) {
+                    btn.className = (n === cnt)
+                        ? "btn-interactive bg-alphagen-purple text-white px-3 py-1 rounded-lg text-xs font-bold"
+                        : "btn-interactive bg-white border border-alphagen-purplePale px-3 py-1 rounded-lg text-xs font-bold";
+                }
+            });
+
+            const titleBadge = document.getElementById('poly-shape-title');
+            if (cnt === 3) titleBadge.innerText = "TRIANGLE (3 Points)";
+            else if (cnt === 4) titleBadge.innerText = "QUADRILATERAL (4 Points)";
+            else if (cnt === 5) titleBadge.innerText = "PENTAGON (5 Points)";
+
+            renderPolyInputs();
+        }
+
+        function renderPolyInputs() {
+            const container = document.getElementById('poly-inputs-container');
+            if (!container) return;
+            container.innerHTML = '';
+
+            for (let i = 0; i < polyPointsCount; i++) {
+                const row = document.createElement('div');
+                row.className = "flex items-center justify-between text-xs font-bold bg-white p-1.5 rounded-lg border border-alphagen-purplePale";
+                row.innerHTML = `
+                    <span class="text-alphagen-purple">Point ${i + 1}:</span>
+                    <div class="flex items-center gap-2">
+                        <span>X: <input type="number" value="${polyPoints[i].x}" min="10" max="350" oninput="updatePolyPoint(${i}, 'x', this.value)" class="w-12 bg-alphagen-purpleGhost border rounded px-1 text-mono text-xs"></span>
+                        <span>Y: <input type="number" value="${polyPoints[i].y}" min="10" max="170" oninput="updatePolyPoint(${i}, 'y', this.value)" class="w-12 bg-alphagen-purpleGhost border rounded px-1 text-mono text-xs"></span>
+                    </div>
+                `;
+                container.appendChild(row);
+            }
+
+            updatePolyCanvas();
+        }
+
+        function updatePolyPoint(idx, key, val) {
+            polyPoints[idx][key] = parseInt(val) || 0;
+            updatePolyCanvas();
+        }
+
+        function updatePolyCanvas() {
+            const listStr = '[' + polyPoints.slice(0, polyPointsCount).map(p => `(${p.x}, ${p.y})`).join(', ') + ']';
+            const listEl = document.getElementById('poly-code-list');
+            if (listEl) listEl.innerText = listStr;
+
+            const canvas = document.getElementById('canvas-poly');
+            if (!canvas) return;
+
+            if (canvas.clientWidth && canvas.clientHeight) {
+                canvas.width = canvas.clientWidth;
+                canvas.height = canvas.clientHeight;
+            }
+
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Grid background
+            ctx.strokeStyle = '#313244';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < canvas.width; i += 30) {
+                ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke();
+            }
+            for (let j = 0; j < canvas.height; j += 30) {
+                ctx.beginPath(); ctx.moveTo(0, j); ctx.lineTo(canvas.width, j); ctx.stroke();
+            }
+
+            // Draw Polygon
+            ctx.fillStyle = '#ffd071';
+            ctx.strokeStyle = '#e6b84a';
+            ctx.lineWidth = 3;
+
+            ctx.beginPath();
+            ctx.moveTo(polyPoints[0].x, polyPoints[0].y);
+            for (let i = 1; i < polyPointsCount; i++) {
+                ctx.lineTo(polyPoints[i].x, polyPoints[i].y);
+            }
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+        }
+
+        /* Slide 9 Knowledge Check Quiz Logic */
+        const quiz1Answers = { 1: 2, 2: 3, 3: 1 };
+        let quiz1State = { 1: null, 2: null, 3: null };
+
+        function checkQuiz1(qNum, optNum, el) {
+            if (quiz1State[qNum] !== null) return;
+            quiz1State[qNum] = optNum;
+
+            const parent = el.parentElement;
+            const options = parent.querySelectorAll('.quiz-option');
+
+            options.forEach((opt, idx) => {
+                if (idx + 1 === quiz1Answers[qNum]) {
+                    opt.classList.add('correct');
+                } else if (idx + 1 === optNum && optNum !== quiz1Answers[qNum]) {
+                    opt.classList.add('wrong');
+                }
+            });
+
+            if (optNum === quiz1Answers[qNum]) {
+                playSound('correct');
+            } else {
+                playSound('wrong');
+            }
+
+            if (quiz1State[1] !== null && quiz1State[2] !== null && quiz1State[3] !== null) {
+                const allCorrect = quiz1State[1] === quiz1Answers[1] && quiz1State[2] === quiz1Answers[2] && quiz1State[3] === quiz1Answers[3];
+                const banner = document.getElementById('quiz1-feedback-banner');
+                if (allCorrect) {
+                    triggerConfetti();
+                    banner.innerText = "AMAZING! You answered all 3 Shape Quiz questions correctly!";
+                    banner.className = "bg-emerald-50 border-2 border-emerald-300 p-2.5 rounded-2xl text-xs text-emerald-800 font-bold text-center";
+                } else {
+                    banner.innerText = "Good effort! Review the green highlighted correct answers above.";
+                    banner.className = "bg-alphagen-yellowPale border-2 border-alphagen-yellowDark p-2.5 rounded-2xl text-xs text-alphagen-nearBlack font-bold text-center";
+                }
+            }
+        }
+
+        /* Slide 11 Master Quiz Logic */
+        const masterQuizAnswers = { 1: 2, 2: 2, 3: 1 };
+        let masterQuizState = { 1: null, 2: null, 3: null };
+
+        function checkMasterQuiz(qNum, optNum, el) {
+            if (masterQuizState[qNum] !== null) return;
+            masterQuizState[qNum] = optNum;
+
+            const parent = el.parentElement;
+            const options = parent.querySelectorAll('.quiz-option');
+
+            options.forEach((opt, idx) => {
+                if (idx + 1 === masterQuizAnswers[qNum]) {
+                    opt.classList.add('correct');
+                } else if (idx + 1 === optNum && optNum !== masterQuizAnswers[qNum]) {
+                    opt.classList.add('wrong');
+                }
+            });
+
+            if (optNum === masterQuizAnswers[qNum]) {
+                playSound('correct');
+            } else {
+                playSound('wrong');
+            }
+
+            if (masterQuizState[1] !== null && masterQuizState[2] !== null && masterQuizState[3] !== null) {
+                const allCorrect = masterQuizState[1] === masterQuizAnswers[1] && masterQuizState[2] === masterQuizAnswers[2] && masterQuizState[3] === masterQuizAnswers[3];
+                const banner = document.getElementById('master-quiz-feedback-banner');
+                if (allCorrect) {
+                    triggerConfetti();
+                    banner.innerText = "FANTASTIC! You aced the Pygame Shapes Master Quiz!";
+                    banner.className = "bg-emerald-50 border-2 border-emerald-300 p-2.5 rounded-2xl text-xs text-emerald-800 font-bold text-center";
+                } else {
+                    banner.innerText = "Good effort! Check the green highlighted correct answers above.";
+                    banner.className = "bg-alphagen-yellowPale border-2 border-alphagen-yellowDark p-2.5 rounded-2xl text-xs text-alphagen-nearBlack font-bold text-center";
+                }
+            }
+        }
+
+        function triggerConfetti() {
+            if (typeof confetti === 'function') {
+                confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+            }
+        }
+
+        /* Keyboard Listener */
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+            if (e.key === 'ArrowRight' || e.key === 'Space') nextSlide();
+            if (e.key === 'ArrowLeft') prevSlide();
+        });
+
+        window.addEventListener('DOMContentLoaded', () => {
+            initHeaderDots();
+            updateSlideDisplay();
+        });
+    </script>
+</body>
+</html>
